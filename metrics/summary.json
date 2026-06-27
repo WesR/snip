@@ -1,0 +1,91 @@
+{
+  "name": "SNIP",
+  "expanded_name": "Small N-gram Identifier for Pastes",
+  "metrics": {
+    "development_holdouts": {
+      "accuracy": 0.9903,
+      "examples": 207
+    },
+    "final_mixed_holdout": {
+      "accuracy": 0.9821428571428571,
+      "examples": 56,
+      "known_coverage": 1.0,
+      "macro_f1": 0.9809523809523809
+    },
+    "hard_cases": {
+      "accuracy": 0.9932432432432432,
+      "examples": 148,
+      "known_coverage": 1.0,
+      "macro_f1": 0.6904761904761905
+    },
+    "test": {
+      "accuracy": 0.9962406015037594,
+      "examples": 532,
+      "known_coverage": 1.0,
+      "macro_f1": 0.9926318594465098
+    },
+    "validation": {
+      "accuracy": 1.0,
+      "examples": 487,
+      "known_coverage": 1.0,
+      "macro_f1": 1.0
+    },
+    "regression_holdouts": {
+      "accuracy": 0.9796,
+      "examples": 196
+    }
+  },
+  "performance": {
+    "browser": "Google Chrome 149.0.7827.116",
+    "hardware": "Mac M2",
+    "model_parse_ms": 4.4,
+    "platform": "macOS arm64",
+    "results": [
+      {
+        "case": "1 KB paste",
+        "classifications": 5000,
+        "input_chars": 1024,
+        "mean_ms": 1.499,
+        "p50_ms": 1.49,
+        "p95_ms": 1.548,
+        "sampled_chars": 1024
+      },
+      {
+        "case": "16 KB paste",
+        "classifications": 1000,
+        "input_chars": 16384,
+        "mean_ms": 6.578,
+        "p50_ms": 6.58,
+        "p95_ms": 6.73,
+        "sampled_chars": 16384
+      },
+      {
+        "case": "100 KB paste",
+        "classifications": 800,
+        "input_chars": 102400,
+        "mean_ms": 5.195,
+        "p50_ms": 5.18,
+        "p95_ms": 5.31,
+        "sampled_chars": 12292
+      },
+      {
+        "case": "1 MB paste",
+        "classifications": 800,
+        "input_chars": 1048576,
+        "mean_ms": 5.184,
+        "p50_ms": 5.17,
+        "p95_ms": 5.31,
+        "sampled_chars": 12292
+      },
+      {
+        "case": "5 MB paste",
+        "classifications": 800,
+        "input_chars": 5242880,
+        "mean_ms": 5.238,
+        "p50_ms": 5.21,
+        "p95_ms": 5.38,
+        "sampled_chars": 12292
+      }
+    ]
+  }
+}

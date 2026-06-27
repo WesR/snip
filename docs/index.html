@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SNIP: Small N-gram Identifier for Pastes</title>
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="%230f766e"/><text x="32" y="42" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="700" fill="white">S</text></svg>'>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f3ee;
+      --paper: #fffdf8;
+      --surface: #ffffff;
+      --text: #171717;
+      --muted: #62615d;
+      --line: #d8d2c6;
+      --line-strong: #bcb3a4;
+      --accent: #0f766e;
+      --accent-2: #7c2d12;
+      --accent-weak: #e0f2ef;
+      --warn: #8a4f00;
+      --code-bg: #f2eee7;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #ffffff;
+      color: var(--text);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    main {
+      width: min(1120px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 42px 0 64px;
+    }
+
+    .hero {
+      max-width: 1080px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      color: #303030;
+      font-size: 2.5rem;
+      font-weight: 500;
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 24px 0 0;
+      color: #454545;
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    .author-line {
+      margin-top: 24px;
+      color: #2f2f2f;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+
+    .release-line {
+      margin-top: 8px;
+      color: #5c5c5c;
+      font-size: 17px;
+      line-height: 1.5;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .link-button,
+    button {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fbfaf7;
+      color: var(--text);
+      padding: 8px 15px;
+      font: inherit;
+      font-size: 13px;
+      text-decoration: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .link-button:hover,
+    button:hover {
+      border-color: var(--line-strong);
+      background: #f4f0e9;
+    }
+
+    .links .primary-link {
+      border-color: #050505;
+      background: #050505;
+      color: #ffffff;
+    }
+
+    .demo {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 16px;
+      align-items: start;
+      margin-top: 38px;
+      scroll-margin-top: 24px;
+    }
+
+    .editor,
+    .result {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      min-width: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .samples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 420px;
+      resize: vertical;
+      border: 0;
+      padding: 16px;
+      outline: none;
+      color: var(--text);
+      background: transparent;
+      font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      tab-size: 2;
+    }
+
+    .result {
+      padding: 16px;
+    }
+
+    .label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .label strong {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .meter {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #eee9df;
+      margin: 12px 0 16px;
+    }
+
+    .meter span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 140ms ease-out;
+    }
+
+    .alternatives {
+      display: grid;
+      gap: 9px;
+      margin-top: 16px;
+    }
+
+    .alt {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 9px 0;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .alt:first-child {
+      border-top: 0;
+    }
+
+    .alt code {
+      position: relative;
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      overflow-wrap: anywhere;
+      border-radius: 7px;
+      background: linear-gradient(
+        90deg,
+        rgba(15, 118, 110, 0.18) var(--bar-width, 0%),
+        var(--code-bg) var(--bar-width, 0%)
+      );
+      padding: 4px 8px;
+    }
+
+    .details {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .paper {
+      margin: 60px auto 0;
+      max-width: 920px;
+      scroll-margin-top: 24px;
+    }
+
+    .paper-header {
+      max-width: 920px;
+      margin: 0 auto 34px;
+      text-align: center;
+    }
+
+    .paper h2,
+    .paper h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      letter-spacing: 0;
+    }
+
+    .paper h2 {
+      margin: 0;
+      color: #303030;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 2rem;
+      font-weight: 500;
+      line-height: 1.12;
+    }
+
+    .author-block {
+      margin-top: 16px;
+      color: #25231f;
+      font-size: 17px;
+      line-height: 1.45;
+    }
+
+    .author-name {
+      font-weight: 600;
+    }
+
+    .author-affiliation,
+    .release-meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .release-meta {
+      margin-top: 10px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .abstract {
+      margin: 46px auto 0;
+      max-width: 920px;
+      padding: 0;
+      text-align: left;
+      color: #555555;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    .abstract h2 {
+      margin-bottom: 28px;
+      text-align: center;
+      font-size: 2rem;
+    }
+
+    .paper-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+      align-items: start;
+    }
+
+    .paper section {
+      max-width: 920px;
+      margin-right: auto;
+      margin-left: auto;
+      margin-top: 28px;
+    }
+
+    .paper h3 {
+      margin: 0 0 13px;
+      color: #303030;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 2rem;
+      font-weight: 500;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .paper p,
+    .paper li {
+      color: #555555;
+      font-size: 17px;
+      line-height: 1.72;
+    }
+
+    .paper p {
+      margin: 0 0 12px;
+    }
+
+    .paper ul,
+    .paper ol {
+      margin: 0;
+      padding-left: 22px;
+    }
+
+    .side-note {
+      border-left: 3px solid var(--accent);
+      padding: 10px 0 10px 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .equation {
+      margin: 16px 0;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--code-bg);
+      padding: 14px;
+      color: #26231f;
+      font: 14px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      white-space: nowrap;
+    }
+
+    .code-block {
+      white-space: pre;
+    }
+
+    .pipeline-diagram {
+      width: min(1040px, calc(100vw - 32px));
+      margin: 26px 50% 28px;
+      transform: translateX(-50%);
+      overflow-x: auto;
+    }
+
+    .pipeline-diagram svg {
+      display: block;
+      width: 100%;
+      min-width: 820px;
+      height: auto;
+    }
+
+    .pipeline-diagram .box {
+      fill: #fffdf8;
+      stroke: #cfc7b8;
+      stroke-width: 1.25;
+    }
+
+    .pipeline-diagram .box-emphasis {
+      fill: #e0f2ef;
+      stroke: #0f766e;
+    }
+
+    .pipeline-diagram .arrow {
+      fill: none;
+      stroke: #857d70;
+      stroke-width: 1.5;
+      marker-end: url(#arrowhead);
+    }
+
+    .pipeline-diagram .stage {
+      fill: #242424;
+      font: 700 15px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .pipeline-diagram .detail {
+      fill: #66615a;
+      font: 12px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .pipeline-diagram .caption {
+      fill: #59544d;
+      font: 12px Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .pipeline {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .node {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fffaf0;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .node strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 6px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    td.number,
+    th.number {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    code {
+      border-radius: 5px;
+      background: var(--code-bg);
+      padding: 2px 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+    }
+
+    .labels {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .labels code {
+      font-size: 12px;
+    }
+
+    footer {
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 900px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .links {
+        justify-content: flex-start;
+      }
+
+      .demo,
+      .paper-grid {
+        grid-template-columns: 1fr;
+      }
+
+      textarea {
+        min-height: 340px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      main {
+        width: min(100vw - 20px, 1180px);
+        padding-top: 16px;
+      }
+
+      .toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .samples {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        width: 100%;
+        gap: 8px;
+      }
+
+      .samples button {
+        width: 100%;
+        min-height: 34px;
+        padding: 7px 8px;
+      }
+
+      #clear {
+        align-self: flex-end;
+        width: auto;
+        min-height: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="hero">
+      <h1>SNIP: Small N-gram Identifier for Pastes</h1>
+      <p class="subtitle">A compact browser-local classifier for pasted text, source snippets, logs, and configuration files.</p>
+      <div class="author-line">Wes Ring</div>
+      <div class="release-line">June 2026</div>
+      <nav class="links" aria-label="Project links">
+        <a class="link-button primary-link" href="#demo">Demo</a>
+        <a class="link-button" href="#report">Report</a>
+        <a class="link-button" href="https://github.com/wesr/snip">Code</a>
+        <a class="link-button" href="https://huggingface.co/wesringml/snip">Model</a>
+        <a class="link-button" href="https://www.npmjs.com/package/@wesr/snip">npm</a>
+      </nav>
+    </header>
+
+    <section id="demo" class="demo" aria-label="Live classifier">
+      <div class="editor">
+        <div class="toolbar">
+          <div class="samples" aria-label="Samples">
+            <button type="button" data-sample="python">Python</button>
+            <button type="button" data-sample="json">JSON</button>
+            <button type="button" data-sample="markdown">Markdown</button>
+            <button type="button" data-sample="log">Log</button>
+            <button type="button" data-sample="go">Go</button>
+          </div>
+          <button id="clear" type="button">Clear</button>
+        </div>
+        <textarea id="paste" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+      </div>
+
+      <aside class="result" aria-live="polite">
+        <div class="label">
+          <strong id="label">plain_text</strong>
+          <span id="confidence" class="meta">0.0000</span>
+        </div>
+        <div class="meter" aria-hidden="true"><span id="meter"></span></div>
+        <div class="meta" id="stats">0 chars</div>
+        <div id="alternatives" class="alternatives"></div>
+        <div class="details" id="details">
+          Classification runs in browser
+        </div>
+      </aside>
+    </section>
+
+    <article id="report" class="paper">
+      <header class="paper-header">
+        <div class="abstract">
+          <h2>Overview</h2>
+          SNIP is a compact text classifier for pasted text, snippets, logs, configuration files, and text-like source files.
+          The release model predicts 28 source and text labels from bounded text samples using hashed character n-grams and a sparse
+          linear classifier. It is intended for pastebin sites, editors, and developer tools that need a useful syntax suggestion
+          immediately after text is pasted without sending the pasted content to a server. The model is embedded in a dependency-free
+          TypeScript runtime and released under the BSD 3-Clause license.
+        </div>
+      </header>
+
+      <div class="paper-grid">
+        <div>
+          <section>
+            <h3>Problem</h3>
+            <p>
+              Pastebin sites, editors, and developer tools often need a useful syntax suggestion immediately after text is pasted.
+              SNIP is designed for that narrow workflow: fast browser-local inference without sending pasted content to a server. It
+              predicts a likely syntax or text label for pasted text, snippets, logs, configuration files, and text-like source files.
+              Binary file detection, MIME sniffing, and full file-type forensics are outside the current scope.
+            </p>
+          </section>
+
+          <section>
+            <h3>Method</h3>
+            <p>
+              The release model is a multiclass linear classifier trained with passive-aggressive updates. Input text is sampled,
+              converted to hashed character n-gram features, L2-normalized, scored by sparse per-label weights, and ranked with a
+              softmax transform. The final package exposes both the accepted label and the raw top prediction so applications can
+              decide how much ambiguity to show to users.
+            </p>
+            <figure class="pipeline-diagram" aria-label="SNIP inference pipeline">
+              <svg viewBox="0 0 1160 172" role="img" aria-labelledby="pipeline-title pipeline-desc">
+                <title id="pipeline-title">SNIP inference pipeline</title>
+                <desc id="pipeline-desc">
+                  Input text is sampled, converted to character n-grams, hashed into buckets, normalized, scored with sparse linear weights, and ranked into labels.
+                </desc>
+                <defs>
+                  <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+                    <path d="M0,0 L10,4 L0,8 Z" fill="#857d70"></path>
+                  </marker>
+                </defs>
+
+                <rect class="box box-emphasis" x="18" y="54" width="128" height="88" rx="12"></rect>
+                <text class="stage" x="82" y="84" text-anchor="middle">Input</text>
+                <text class="detail" x="82" y="110" text-anchor="middle">paste, snippet,</text>
+                <text class="detail" x="82" y="128" text-anchor="middle">log, config</text>
+
+                <path class="arrow" d="M154 98 H176"></path>
+
+                <rect class="box" x="184" y="54" width="128" height="88" rx="12"></rect>
+                <text class="stage" x="248" y="84" text-anchor="middle">Sample</text>
+                <text class="detail" x="248" y="110" text-anchor="middle">full <= 16 KiB</text>
+                <text class="detail" x="248" y="128" text-anchor="middle">or 3 windows</text>
+
+                <path class="arrow" d="M320 98 H342"></path>
+
+                <rect class="box" x="350" y="54" width="128" height="88" rx="12"></rect>
+                <text class="stage" x="414" y="84" text-anchor="middle">N-grams</text>
+                <text class="detail" x="414" y="110" text-anchor="middle">characters</text>
+                <text class="detail" x="414" y="128" text-anchor="middle">n = 1..5</text>
+
+                <path class="arrow" d="M486 98 H508"></path>
+
+                <rect class="box" x="516" y="54" width="128" height="88" rx="12"></rect>
+                <text class="stage" x="580" y="84" text-anchor="middle">Hash</text>
+                <text class="detail" x="580" y="110" text-anchor="middle">stable buckets</text>
+                <text class="detail" x="580" y="128" text-anchor="middle">32,768 dims</text>
+
+                <path class="arrow" d="M652 98 H674"></path>
+
+                <rect class="box" x="682" y="54" width="128" height="88" rx="12"></rect>
+                <text class="stage" x="746" y="84" text-anchor="middle">Normalize</text>
+                <text class="detail" x="746" y="110" text-anchor="middle">log1p counts</text>
+                <text class="detail" x="746" y="128" text-anchor="middle">L2 scale</text>
+
+                <path class="arrow" d="M818 98 H840"></path>
+
+                <rect class="box" x="848" y="54" width="128" height="88" rx="12"></rect>
+                <text class="stage" x="912" y="84" text-anchor="middle">Score</text>
+                <text class="detail" x="912" y="110" text-anchor="middle">sparse linear</text>
+                <text class="detail" x="912" y="128" text-anchor="middle">weights</text>
+
+                <path class="arrow" d="M984 98 H1006"></path>
+
+                <rect class="box box-emphasis" x="1014" y="54" width="128" height="88" rx="12"></rect>
+                <text class="stage" x="1078" y="84" text-anchor="middle">Rank</text>
+                <text class="detail" x="1078" y="110" text-anchor="middle">label +</text>
+                <text class="detail" x="1078" y="128" text-anchor="middle">alternatives</text>
+
+                <text class="caption" x="580" y="28" text-anchor="middle">How n-gram works</text>
+              </svg>
+            </figure>
+            <p>
+              Inputs up to 16 KiB are classified whole. Longer inputs are represented by windows from the start, middle, and end,
+              which bounds runtime for large pastes while preserving common file-level signals.
+            </p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Component</th>
+                  <th>Release setting</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>n-gram range</td>
+                  <td>1 through 5 characters</td>
+                </tr>
+                <tr>
+                  <td>Hash buckets</td>
+                  <td>32,768</td>
+                </tr>
+                <tr>
+                  <td>Feature value</td>
+                  <td><code>log1p(count)</code>, L2-normalized</td>
+                </tr>
+                <tr>
+                  <td>Retained weights</td>
+                  <td>1,500 per label</td>
+                </tr>
+                <tr>
+                  <td>Serialized precision</td>
+                  <td>4 decimal places</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h3>Data</h3>
+            <p>
+              The dataset was built iteratively from generated structured text, curated programming examples, realistic project
+              fragments, targeted hard-neighbor cases, and plain-text fallback examples. Candidate splits were checked for exact
+              and normalized duplicate overlap.
+            </p>
+            <p>
+              For programming languages, examples were written as complete files or realistic project fragments: CLIs, web handlers,
+              tests, services, configuration loaders, migrations, and framework code. For structured formats such as JSON, CSV, and
+              logs, examples varied shape, length, field names, nesting, and value distributions rather than repeating one template.
+            </p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Split</th>
+                  <th class="number">Rows</th>
+                  <th class="number">Labels</th>
+                  <th class="number">Median chars</th>
+                  <th class="number">P90 chars</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Train</td>
+                  <td class="number">2,618</td>
+                  <td class="number">28</td>
+                  <td class="number">210.5</td>
+                  <td class="number">1,124</td>
+                </tr>
+                <tr>
+                  <td>Validation</td>
+                  <td class="number">487</td>
+                  <td class="number">28</td>
+                  <td class="number">213</td>
+                  <td class="number">1,192</td>
+                </tr>
+                <tr>
+                  <td>Test</td>
+                  <td class="number">532</td>
+                  <td class="number">28</td>
+                  <td class="number">180</td>
+                  <td class="number">1,049</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              The final training data emphasizes realistic short snippets, source-grouped splits, and explicit hard cases for
+              ambiguous neighboring labels such as HTML/XML, INI/TOML, JSON/log, Markdown/plain text, and CSV/plain text.
+            </p>
+          </section>
+
+          <section>
+            <h3>Training Loop</h3>
+            <p>
+              Each training round started with a candidate model trained on the current corpus. I evaluated it against the normal
+              validation/test split, targeted hard cases for commonly confused labels, and held-out evaluation suites. When the model
+              failed, I did not copy failing held-out rows back into training. Instead, I used those failures to describe a broader
+              missing shape and generated new train-only coverage for that category.
+            </p>
+            <ol>
+              <li>Train a candidate on the current corpus.</li>
+              <li>Evaluate against validation, test, hard cases, and held-out evaluation suites.</li>
+              <li>Inspect failures as categories and patterns.</li>
+              <li>Generate train-only coverage for those categories.</li>
+              <li>Check duplicate and near-duplicate overlap.</li>
+              <li>Train the next candidate and create fresh held-out coverage when a release-quality claim is needed.</li>
+            </ol>
+          </section>
+
+          <section>
+            <h3>Results</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Evaluation set</th>
+                  <th class="number">Examples</th>
+                  <th class="number">Accuracy</th>
+                  <th class="number">Macro F1</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Validation split</td>
+                  <td class="number">487</td>
+                  <td class="number">1.0000</td>
+                  <td class="number">1.0000</td>
+                </tr>
+                <tr>
+                  <td>Test split</td>
+                  <td class="number">532</td>
+                  <td class="number">0.9962</td>
+                  <td class="number">0.9926</td>
+                </tr>
+                <tr>
+                  <td>Held-out evaluation suites</td>
+                  <td class="number">599</td>
+                  <td class="number">0.9816</td>
+                  <td class="number">0.9819</td>
+                </tr>
+                <tr>
+                  <td>Hard-neighbor cases</td>
+                  <td class="number">148</td>
+                  <td class="number">0.9932</td>
+                  <td class="number">0.6905</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              SNIP scores every label and selects the highest-scoring label. The margin shows how far that winner is ahead of the
+              runner-up.
+            </p>
+          </section>
+
+          <section>
+            <h3>Runtime and Size</h3>
+            <p>
+              The runtime is authored in TypeScript and published as plain JavaScript with generated declaration files. It has no
+              runtime dependencies. The raw model JSON is 626,595 bytes, and the gzip-compressed model is 204,593 bytes.
+            </p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Input size</th>
+                  <th class="number">Sampled chars</th>
+                  <th class="number">P50 ms</th>
+                  <th class="number">P95 ms</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1 KB</td>
+                  <td class="number">1,024</td>
+                  <td class="number">1.490</td>
+                  <td class="number">1.548</td>
+                </tr>
+                <tr>
+                  <td>16 KB</td>
+                  <td class="number">16,384</td>
+                  <td class="number">6.580</td>
+                  <td class="number">6.730</td>
+                </tr>
+                <tr>
+                  <td>100 KB</td>
+                  <td class="number">12,292</td>
+                  <td class="number">5.180</td>
+                  <td class="number">5.310</td>
+                </tr>
+                <tr>
+                  <td>1 MB</td>
+                  <td class="number">12,292</td>
+                  <td class="number">5.170</td>
+                  <td class="number">5.310</td>
+                </tr>
+                <tr>
+                  <td>5 MB</td>
+                  <td class="number">12,292</td>
+                  <td class="number">5.210</td>
+                  <td class="number">5.380</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section>
+            <h3>Limitations</h3>
+            <ul>
+              <li>Very short snippets may lack enough evidence for a specific syntax label.</li>
+              <li>TypeScript and JavaScript can be close when a snippet has no type syntax.</li>
+              <li>JSON-lines application logs can be close to JSON.</li>
+              <li>Markdown/plain-text separation can be weak on very short prose-like Markdown.</li>
+              <li>Large JSON manifests with embedded language-labeled snippets can look like source code.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>Labels</h3>
+            <div class="labels" aria-label="Supported labels">
+              <code>bash</code><code>c</code><code>cpp</code><code>csharp</code><code>css</code><code>csv</code>
+              <code>diff</code><code>dockerfile</code><code>go</code><code>html</code><code>ini</code><code>java</code>
+              <code>javascript</code><code>json</code><code>log</code><code>lua</code><code>markdown</code><code>php</code>
+              <code>plain_text</code><code>powershell</code><code>python</code><code>ruby</code><code>rust</code><code>sql</code>
+              <code>toml</code><code>typescript</code><code>xml</code><code>yaml</code>
+            </div>
+          </section>
+
+          <section>
+            <h3>Install and API</h3>
+            <div class="equation">npm install @wesr/snip</div>
+            <p>
+              The package exports <code>classifyText</code> and <code>classifyTextAsync</code>, and embeds the SNIP model directly
+              in the runtime. There is no model fetch step for browser applications.
+            </p>
+            <div class="equation code-block">import { classifyText } from "@wesr/snip";
+
+const result = classifyText(text);
+console.log(result.label);</div>
+            <div class="equation code-block">import { classifyTextAsync } from "@wesr/snip";
+
+const result = await classifyTextAsync(text);</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Export</th>
+                  <th>Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>classifyText(text)</code></td>
+                  <td>Synchronous classification with the embedded SNIP model.</td>
+                </tr>
+                <tr>
+                  <td><code>classifyTextAsync(text)</code></td>
+                  <td>Yields once, then classifies. Useful for UI code that prefers an awaitable API.</td>
+                </tr>
+                <tr>
+                  <td><code>sampleText(text)</code></td>
+                  <td>Returns the bounded sample SNIP will classify for a given input.</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>
+              Results include <code>label</code>, <code>predicted_label</code>, <code>confidence</code>, <code>margin</code>, and
+              the top five <code>alternatives</code>. SNIP scores every label and returns the highest-scoring label as the
+              prediction. <code>margin</code> is the gap between the winning label and the runner-up.
+            </p>
+          </section>
+        </div>
+      </div>
+
+      <footer>
+        <a href="https://github.com/wesr/snip">View SNIP on GitHub</a>
+      </footer>
+    </article>
+  </main>
+
+  <script type="module">
+    import { classifyText, sampleText } from "./dist/snip.js";
+
+    const samples = {
+      python: `from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/notes/{note_id}")
+def read_note(note_id: int):
+    return {"note_id": note_id}
+`,
+      json: `{
+  "service": "notes-api",
+  "enabled": true,
+  "ports": [8080, 9090],
+  "owners": ["platform", "editor"]
+}
+`,
+      markdown: `# Release note
+
+Autosave now restores editor tabs after refresh.
+
+- Drafts keep column order.
+- The save button reports retry state.
+`,
+      log: `2026-06-21T06:05:00Z level=info svc=api event=ready latency_ms=42
+2026-06-21T06:05:07Z level=warn svc=worker event=retry attempt=2
+`,
+      go: `package main
+
+import (
+  "encoding/json"
+  "net/http"
+)
+
+type note struct {
+  ID    string \`json:"id"\`
+  Title string \`json:"title"\`
+}
+
+func handleNotes(w http.ResponseWriter, r *http.Request) {
+  notes := []note{{ID: "n_123", Title: "Release checklist"}}
+  _ = json.NewEncoder(w).Encode(notes)
+}
+`,
+    };
+
+    const pasteEl = document.getElementById("paste");
+    const labelEl = document.getElementById("label");
+    const confidenceEl = document.getElementById("confidence");
+    const meterEl = document.getElementById("meter");
+    const statsEl = document.getElementById("stats");
+    const alternativesEl = document.getElementById("alternatives");
+    const clearEl = document.getElementById("clear");
+
+    let classifyTimer = 0;
+
+    function scheduleClassify() {
+      window.clearTimeout(classifyTimer);
+      classifyTimer = window.setTimeout(classifyNow, 80);
+    }
+
+    function classifyNow() {
+      const text = pasteEl.value;
+      const result = text.trim() ? classifyText(text) : emptyResult();
+      const sampledLength = sampleText(text).length;
+      renderResult(result, text.length, sampledLength);
+    }
+
+    function emptyResult() {
+      return {
+        label: "plain_text",
+        predicted_label: "plain_text",
+        confidence: 0,
+        margin: 0,
+        alternatives: [["plain_text", 0]],
+      };
+    }
+
+    function renderResult(result, length, sampledLength) {
+      labelEl.textContent = result.label;
+      confidenceEl.textContent = `separation +${result.margin.toFixed(4)}`;
+      const marginDisplayMax = 0.05;
+      const separationWidth = Math.min(100, Math.round((result.margin / marginDisplayMax) * 100));
+      meterEl.style.width = `${Math.max(2, separationWidth)}%`;
+      statsEl.textContent = `${length.toLocaleString()} chars; ${sampledLength.toLocaleString()} sampled`;
+      const topScore = result.alternatives[0]?.[1] || 1;
+      alternativesEl.replaceChildren(
+        ...result.alternatives.map(([label, score]) => {
+          const row = document.createElement("div");
+          row.className = "alt";
+          const code = document.createElement("code");
+          code.textContent = label;
+          const relativeWidth = Math.max(2, Math.round((score / topScore) * 100));
+          code.style.setProperty("--bar-width", `${relativeWidth}%`);
+          const value = document.createElement("span");
+          value.className = "meta";
+          value.textContent = score.toFixed(4);
+          row.append(code, value);
+          return row;
+        }),
+      );
+    }
+
+    pasteEl.addEventListener("input", scheduleClassify);
+    clearEl.addEventListener("click", () => {
+      pasteEl.value = "";
+      classifyNow();
+      pasteEl.focus();
+    });
+
+    for (const button of document.querySelectorAll("[data-sample]")) {
+      button.addEventListener("click", () => {
+        pasteEl.value = samples[button.dataset.sample];
+        classifyNow();
+        pasteEl.focus();
+      });
+    }
+
+    pasteEl.value = samples.python;
+    classifyNow();
+  </script>
+</body>
+</html>

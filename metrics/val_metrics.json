@@ -1,0 +1,202 @@
+{
+  "accuracy": 1.0,
+  "known_abstain_rate": 0.0,
+  "known_coverage": 1.0,
+  "length_buckets": {
+    "000_lt_256": {
+      "accuracy": 1.0,
+      "total": 296,
+      "unknown_rate": 0.0
+    },
+    "001_256_1k": {
+      "accuracy": 1.0,
+      "total": 128,
+      "unknown_rate": 0.0
+    },
+    "002_1k_4k": {
+      "accuracy": 1.0,
+      "total": 62,
+      "unknown_rate": 0.0
+    },
+    "004_16k_plus": {
+      "accuracy": 1.0,
+      "total": 1,
+      "unknown_rate": 0.0
+    }
+  },
+  "macro_f1": 1.0,
+  "per_label": {
+    "bash": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "c": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "cpp": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "csharp": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "css": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 23
+    },
+    "csv": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 25
+    },
+    "diff": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 24
+    },
+    "dockerfile": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 22
+    },
+    "go": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "html": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 23
+    },
+    "ini": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 23
+    },
+    "java": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "javascript": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "json": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 26
+    },
+    "log": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 25
+    },
+    "lua": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "markdown": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 24
+    },
+    "php": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "plain_text": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 92
+    },
+    "powershell": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "python": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 7
+    },
+    "ruby": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "rust": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "sql": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 23
+    },
+    "toml": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 24
+    },
+    "typescript": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 6
+    },
+    "xml": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 23
+    },
+    "yaml": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 25
+    }
+  },
+  "total": 487,
+  "unknown_false_accept_rate": 0.0,
+  "unknown_rate": 0.0,
+  "unknown_rejection_rate": 0.0
+}

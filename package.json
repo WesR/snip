@@ -1,0 +1,48 @@
+{
+  "name": "@wesr/snip",
+  "version": "1.0.0",
+  "description": "SNIP: Small N-gram Identifier for Pastes, a browser-local paste and text type classifier.",
+  "license": "BSD-3-Clause",
+  "author": "Wes Ring",
+  "homepage": "https://snip.wesring.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wesr/snip.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wesr/snip/issues"
+  },
+  "keywords": [
+    "classifier",
+    "language-detection",
+    "syntax-detection",
+    "ngram",
+    "paste",
+    "browser",
+    "typescript",
+    "machine-learning"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/snip.d.ts",
+      "import": "./dist/snip.js"
+    }
+  },
+  "types": "./dist/snip.d.ts",
+  "files": [
+    "dist/"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "node scripts/generate-model-module.mjs && tsc -p tsconfig.json",
+    "typecheck": "node scripts/generate-model-module.mjs && tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node examples/node-example.mjs",
+    "prepack": "npm run build",
+    "pack:dry": "npm pack --dry-run",
+    "publish:public": "npm publish --access public"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
