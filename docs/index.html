@@ -787,19 +787,76 @@
           <section>
             <h3>Training Loop</h3>
             <p>
-              Each training round started with a candidate model trained on the current corpus. I evaluated it against the normal
-              validation/test split, targeted hard cases for commonly confused labels, and held-out evaluation suites. When the model
-              failed, I did not copy failing held-out rows back into training. Instead, I used those failures to describe a broader
-              missing shape and generated new train-only coverage for that category.
+              A major objective of training the n-gram was testing how much of training a model can be performed semi-autonomously by
+              an LLM Agent. n-grams are incredibly fast to train, and afforded the model many opportunities to run experiences and
+              build up a training dataset over time that specifically targeted failures in the trained models. A key part of getting
+              that loop to work was ensuring the data stayed representative of a real-world text distribution while keeping the model
+              from over-fitting to the generated dataset. The Agent was instructed to keep notes, an experiments log, and a data
+              quality log. It did require a bit of nudging along the way, such as prompting it to manually inspect some of the
+              generated data and note the quality issues (For example early C examples were almost all duplicates of 4-5 lines of a
+              <code>main()</code> printing a few words).
+            </p>
+            <p>
+              Each round started with a candidate model trained on the current corpus. The agent evaluated it against the normal
+              validation/test split, targeted hard cases for confused labels and the held-out evaluation suites. When the model failed,
+              a subagent was used to describe the failures as broader missing shape: short prose-heavy Markdown, TOML that looks like
+              INI, JSON-looking application logs, small diffs, short language snippets without imports, and so on.
+            </p>
+            <p>
+              Those descriptions were then used to create new train-only examples. For programming languages, the examples were usually
+              generated as realistic files or fragments rather than templates. For structured formats, the generation could be more
+              programmatic, but still had to vary field names, lengths, nesting, and punctuation. Before a new training split was used,
+              the added rows were checked against the rest of the corpus for exact or near-duplicate overlap.
+            </p>
+            <p>
+              A separate LLM subagent was used to create new held-out evaluation suites between rounds. This was important to help
+              ensure the overall quality of the train dataset. We want the generated examples to be different enough to keep the model
+              robust. The held-out suites were generated from label-level requirements and broad scenario prompts, then locked before
+              the next candidate was evaluated. Once a held-out suite exposed an error category and influenced the next data pass, it
+              was no longer treated as a final benchmark. It became a regression suite.
+            </p>
+            <p>
+              The loop looked like this:
             </p>
             <ol>
-              <li>Train a candidate on the current corpus.</li>
-              <li>Evaluate against validation, test, hard cases, and held-out evaluation suites.</li>
-              <li>Inspect failures as categories and patterns.</li>
-              <li>Generate train-only coverage for those categories.</li>
-              <li>Check duplicate and near-duplicate overlap.</li>
-              <li>Train the next candidate and create fresh held-out coverage when a release-quality claim is needed.</li>
+              <li>train a candidate on the current corpus</li>
+              <li>evaluate against validation, test, hard cases, and held-out evaluation suites</li>
+              <li>inspect failures as categories and patterns</li>
+              <li>generate train-only coverage for those categories</li>
+              <li>check duplicate and near-duplicate overlap</li>
+              <li>train the next candidate</li>
+              <li>create fresh held-out coverage when a release-quality claim is needed</li>
             </ol>
+            <p>
+              This process let the dataset grow in the directions the n-gram actually needed while keeping a clean separation between
+              training data and held-out evaluation suites.
+            </p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Evaluation role</th>
+                  <th class="number">Rows</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Validation + test</td>
+                  <td class="number">1,019</td>
+                  <td>Main split evaluation</td>
+                </tr>
+                <tr>
+                  <td>Held-out suites</td>
+                  <td class="number">599</td>
+                  <td>Independent checks generated across training rounds</td>
+                </tr>
+                <tr>
+                  <td>Hard-neighbor cases</td>
+                  <td class="number">148</td>
+                  <td>Targeted stress cases for commonly confused labels</td>
+                </tr>
+              </tbody>
+            </table>
           </section>
 
           <section>
