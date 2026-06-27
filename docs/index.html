@@ -494,6 +494,9 @@
     }
 
     footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
       margin-top: 28px;
       padding-top: 18px;
       border-top: 1px solid var(--line);
@@ -563,7 +566,7 @@
       <div class="release-line">June 2026</div>
       <nav class="links" aria-label="Project links">
         <a class="link-button primary-link" href="#demo">Demo</a>
-        <a class="link-button" href="#report">Report</a>
+        <a class="link-button" href="https://github.com/wesr/snip/blob/main/REPORT.md">Full Report</a>
         <a class="link-button" href="https://github.com/wesr/snip">Code</a>
         <a class="link-button" href="https://huggingface.co/wesringml/snip">Model</a>
         <a class="link-button" href="https://www.npmjs.com/package/@wesr/snip">npm</a>
@@ -961,6 +964,7 @@ const result = await classifyTextAsync(text);</div>
       </div>
 
       <footer>
+        <a href="https://github.com/wesr/snip/blob/main/REPORT.md">Read the full technical report</a>
         <a href="https://github.com/wesr/snip">View SNIP on GitHub</a>
       </footer>
     </article>
